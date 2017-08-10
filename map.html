@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Searchable Map</title>
+	<style>
+		* {
+			box-sizing: border-box;
+		}
+		body {
+			display: flex;
+			flex-direction: row;
+		}
+		
+		form {
+			margin-top: 20px;
+		}
+		#scroller {
+			width: 100px;
+		}
+		#scrollup {
+			margin-left: 12px;
+		}
+		#scrolldown {
+			margin-left: 12px;
+		}
+	</style>
+</head>
+<body onload= "onloadHandler();">
+	<div style ="position: relative; margin: 20px 20px 20px 20px; overflow: hidden; border: solid 20px gray; top: 0px; left: 0px;" id="mapDiv"> 
+		<img style = "position: absolute; top: 0px; left: 0px; width: 1283px; height: 997px" src="map-s.gif" alt="stanford map" id="mapImage">
+	</div>
+	<form>
+		<div id = 'zoominout'>
+			<input type="button" value='+' id="zoomin"/>
+			<input type="button" value ='-' id="zoomout"/>
+		</div>
+		<div id ="scroller">
+			<input type ="button" value ='&#9650;' id="scrollup"/>
+			<div id = "leftrigthsroll">
+				<input type ="button" value ='&#9668;' id ='scrollleft'/>
+				<input type ="button" value ='&#9658;' id ='scrollright'/>
+			</div>
+			<input type ="button" value ='&#9660;' id ='scrolldown'/>
+		</div> <!-- end scroller-->
+	</form>
+	<script>
+		var picArray = new Array("map-s.gif","map-m.gif","map-l.gif","map-xl.gif");
+		var imageArray = new Array();
+		var isDraggable = false;
+		var currentImage = 0;
+		var startingPositionX;
+		var startingPositionY;
+		function handleResize() {
+			console.log("entered handelResize");
+				var windowWidth = window.innerWidth;
+				var windowHeigth = window.innerHeight;
+				var photoDivWidth = parseInt(windowWidth*0.71) + "px";
+				var photoDivHeight = parseInt(windowHeigth*0.71) + "px";
+				document.getElementById('mapDiv').style.width = photoDivWidth;
+				document.getElementById('mapDiv').style.height = photoDivHeight;
+		}
+		window.addEventListener("resize", handleResize, false);
+		
+		/// INFORMATION RETRIEVAL FUNCTIONS
+		function getMapContainerHeight() {
+			console.log("entered getMapContainerHeight");
+			var container = document.getElementById("mapDiv");
+			return parseInt(window.getComputedStyle(container,null).getPropertyValue("height"));
+		}
+
+		function getMapContainerWidth() {
+			console.log("entered getMapContainerWidth");
+			var container = document.getElementById("mapDiv");
+			return parseInt(window.getComputedStyle(container,null).getPropertyValue("width"));
+		}
+
+		function inMapContainer(x,y) {
+			console.log("entered inMapContainer");
+			return (x >= 20 && x <= 20 + getMapContainerWidth()
+					&& y >= 20 && y <= 20 + getMapContainerHeight());
+		}
+		var isDragging = false;
+		function handleMouseDown(evt) {
+			console.log("entered handleMouseDown");
+			evt = (evt) ? evt : ((event) ? event : null);
+			evt.preventDefault();
+			var mapImage = document.getElementById("mapImage");
+			if (evt.target!= mapImage) {
+				return;
+			}
+			console.log(inMapContainer(evt.clientX,evt.clientY));
+			if (inMapContainer(evt.clientX,evt.clientY)) {
+				isDragging = true;
+				document.getElementById("mapImage").style.cursor = "move";
+				startingPositionY = evt.clientY;
+				startingPositionX = evt.clientX;
+				console.log("this is my starting position X " + startingPositionX)
+				console.log("this is my starting position Y " + startingPositionY)
+				return false;	// don't forget this line or some versions of Firefox will get in trouble when dragging
+			}
+		}
+		function handleMouseUp(evt) {
+			evt.preventDefault();
+			var mapImage = document.getElementById("mapImage");
+			if (evt.target!= mapImage && !isDragging) {
+				return;
+			}
+			console.log("entered handleMouseUp");
+			evt = (evt) ? evt : ((event) ? event : null);
+			if (isDragging) {
+				isDragging = false;
+				document.getElementById("mapImage").style.cursor = "default";
+			}
+		}
+		function handleMouseMove(evt) {
+			evt.preventDefault();
+			console.log("entered handleMouseMove");
+			var mapImage = document.getElementById("mapImage");
+			if (evt.target!= mapImage) {
+				return;
+			}
+			evt = (evt) ? evt : ((event) ? event : null);
+			if (isDragging) {
+				var mapImage = document.getElementById("mapImage");
+				console.log(evt.clientX - startingPositionX + " calculation");
+				var styleLeft = parseInt(mapImage.style.left) + (evt.clientX - startingPositionX);
+				var styleTop =  parseInt(mapImage.style.top) + (evt.clientY - startingPositionY);
+				if (boxinImage(styleLeft, styleTop)) {
+					console.log("inside boxInImage");
+					startingPositionX = evt.clientX;
+					startingPositionY = evt.clientY;
+					mapImage.style.left = styleLeft  + "px";
+					mapImage.style.top = styleTop + "px";
+				}
+				return false;  // don't forget this line or some versions of IE won't allow dragging;
+			}
+		}
+
+		function boxinImage(styleLeft, styleTop) {
+			console.log("entered boxinImage");
+			var mapDiv = document.getElementById("mapDiv");
+			var mapImage = document.getElementById("mapImage");
+			return true;
+			// return (styleLeft <= parseInt(mapDiv.style.left) && 
+			// 	styleTop <= parseInt(mapDiv.style.top) &&
+			// 	styleLeft + parseInt(mapImage.style.width) >= parseInt(mapDiv.style.left) + parseInt(mapDiv.style.width) - 40 
+			// 	&& styleTop + parseInt(mapImage.style.height) >= parseInt(mapDiv.style.top) + parseInt(mapDiv.style.height) - 40);
+
+		}
+		function handleDblClick(evt){
+			console.log("entered handleDblClick");
+			evt = (evt) ? evt : ((event) ? event : null);
+			var mapImage = document.getElementById("mapImage");
+			if (evt.target!= mapImage) {
+				return;
+			}
+			var mapDiv = document.getElementById("mapDiv");
+			// new image's corner = currentCorner + (center - positionClicked);
+			var imageLeft = parseInt(mapImage.style.left) + parseInt(mapDiv.style.left) + parseInt(mapDiv.style.width)/2 - evt.clientX;
+			var imageTop = parseInt(mapImage.style.top) + parseInt(mapDiv.style.top) + parseInt(mapDiv.style.height)/2 - evt.clientY;
+			mapImage.style.left = imageLeft  + "px";
+			mapImage.style.top = imageTop + "px";
+		}
+		function onloadHandler(){
+			handleResize();
+			preloadImages();
+		}
+		function preloadImages(){
+			for (var i=0; i < picArray.length; i++) {
+			imageArray[i] = new Image();
+			imageArray[i].src = picArray[i];
+			}
+		}
+		function handleScrollup() {
+			console.log("entered handleScrollup");
+			var mapImage = document.getElementById("mapImage");
+			var mapDiv = document.getElementById("mapDiv");
+			var imageTop = parseInt(mapImage.style.top) - parseInt(mapDiv.style.height)/2;
+			mapImage.style.top = imageTop + "px";
+		}
+		function handleScrolldown() {
+			console.log("entered handleScrolldown");
+			var mapImage = document.getElementById("mapImage");
+			var mapDiv = document.getElementById("mapDiv");
+			var imageTop = parseInt(mapImage.style.top) + parseInt(mapDiv.style.height)/2;
+			mapImage.style.top = imageTop + "px";
+		}
+		function handleScrollleft() {
+			console.log("entered handleScrollleft");
+			var mapImage = document.getElementById("mapImage");
+			var mapDiv = document.getElementById("mapDiv");
+			var imageLeft = parseInt(mapImage.style.left) - parseInt(mapDiv.style.width)/2;
+			mapImage.style.left = imageLeft  + "px";
+		}
+		function handleScrollright() {
+			console.log("entered handleScrolllright");
+			var mapImage = document.getElementById("mapImage");
+			var mapDiv = document.getElementById("mapDiv");
+			var imageLeft = parseInt(mapImage.style.left) + parseInt(mapDiv.style.width)/2;
+			mapImage.style.left = imageLeft  + "px";
+		}
+		function handleZoomout(){
+			console.log("entered handleZoomout");
+			var mapImage = document.getElementById("mapImage");
+			var mapDiv = document.getElementById("mapDiv");
+			currentImage--;
+			if (currentImage < 0) {
+				currentImage = 0;
+				return;
+			}
+			console.log(picArray[currentImage]+ " am I getting the image?");
+			var leftOldImage = parseFloat(mapImage.style.left);
+			var topOldImage = parseFloat(mapImage.style.top);
+			var widthOldImage = parseFloat(mapImage.width);
+			var heightOldImage = parseFloat(mapImage.height);
+			var frameWidth = parseFloat(mapDiv.style.width);
+			var frameHeight = parseFloat(mapDiv.style.height);
+			mapImage.src = picArray[currentImage];
+			mapImage.style.width = imageArray[currentImage].width + "px";
+			mapImage.style.height = imageArray[currentImage].height+ "px";
+			var newPositionLeft = parseInt(frameWidth*0.5-(frameWidth*0.5 - leftOldImage)*parseFloat(imageArray[currentImage].width)/widthOldImage);
+			var newPositionTop = parseInt(frameHeight*0.5 -(frameHeight*0.5 - topOldImage)*parseFloat(imageArray[currentImage].height)/heightOldImage);
+			console.log(newPositionLeft+ " new left!!!");
+			console.log(newPositionTop +" new top!!");
+			mapImage.style.left = newPositionLeft + "px";
+			mapImage.style.top = newPositionTop+ "px";
+		}
+		function handleZoomin(){
+			console.log("entered handleZoomin");
+			var mapImage = document.getElementById("mapImage");
+			currentImage++;
+			if (currentImage > 3) {
+				currentImage = 3;
+				return;
+			}
+			var leftOldImage = parseFloat(mapImage.style.left);
+			var topOldImage = parseFloat(mapImage.style.top);
+			var widthOldImage = parseFloat(mapImage.width);
+			var heightOldImage = parseFloat(mapImage.height);
+			var frameWidth = parseFloat(mapDiv.style.width);
+			var frameHeight = parseFloat(mapDiv.style.height);
+			mapImage.src = picArray[currentImage];
+			mapImage.style.width = imageArray[currentImage].width + "px";
+			mapImage.style.height = imageArray[currentImage].height+ "px";
+			var newPositionLeft = parseInt(frameWidth*0.5-(frameWidth*0.5 - leftOldImage)*parseFloat(imageArray[currentImage].width)/widthOldImage);
+			var newPositionTop = parseInt(frameHeight*0.5 -(frameHeight*0.5 - topOldImage)*parseFloat(imageArray[currentImage].height)/heightOldImage);
+			console.log(newPositionLeft+ " new left!!!");
+			console.log(newPositionTop +" new top!!");
+			mapImage.style.left = newPositionLeft + "px";
+			mapImage.style.top = newPositionTop+ "px";
+
+
+		}
+		document.addEventListener("dblclick", handleDblClick, false);
+		document.addEventListener("mousedown", handleMouseDown, false);
+		document.addEventListener("mouseup", handleMouseUp, false);
+		document.addEventListener("mousemove", handleMouseMove, false);		
+		document.getElementById("scrollup").addEventListener("click",handleScrollup, false);
+		document.getElementById("scrolldown").addEventListener("click",handleScrolldown, false);
+		document.getElementById("scrollleft").addEventListener("click",handleScrollleft, false);
+		document.getElementById("scrollright").addEventListener("click",handleScrollright, false);
+		document.getElementById("zoomin").addEventListener("click",handleZoomin, false);
+		document.getElementById("zoomout").addEventListener("click",handleZoomout, false);
+	</script>
+</body>
+</html>

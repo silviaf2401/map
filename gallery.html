@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>Stanford Gallery</title>
+		<style>
+			* {
+				box-sizing: border-box;
+			}
+			body {
+				margin: 0px 0px 0px 0px;
+			}
+			#caption {
+				padding: 10px;
+				box-sizing: border-box;
+				color: white;
+				font-size: 14pt;
+				font-family: sans-serif;
+				background-color: #008800;
+				opacity: 0.5;
+			}
+			#photoSection {
+				position: absolute;
+				width: 800px;
+				height: 600px;
+			}
+			#photo {
+				width: 100%;
+				height: 100%;
+				position: absolute;
+				top: 0px;
+				left: 0px;
+			}
+			#caption {
+				position: absolute;
+				bottom: 0px;
+				left: 0px;
+				width: 100%;
+			}
+			#forwardOverlay {
+				width: 50%;
+				height: 100%;
+				position: absolute;
+				right: 0px;
+				top: 0px;
+				opacity: 0;
+				z-index: 2;
+			}
+			#backwardOverlay{
+				width: 50%;
+				height: 100%;
+				position: absolute;
+				left: 0px;
+				top: 0px;
+				opacity: 0;
+				z-index: 2;
+			}
+			#backwardsArrow {
+				visibility: hidden;
+				position: absolute;
+				top: 50%;
+				left: 0px;
+				z-index: 1;
+				width: 25px;
+				height: 25px;
+			}
+			#forwardArrow {
+				visibility: hidden;
+				position: absolute;
+				top: 50%;
+				right: 0px;
+				z-index: 1;
+				width: 25px;
+				height: 25px
+			}
+		</style>
+	</head>
+	<body onload = "handleResize();">
+		<div id="photoSection">
+			<img  id='photo' src='memchu.jpg' alt='photo' />
+			<div id="caption">
+			Stanford Memorial Church - the church used to have an 80' bell tower, which fell in the 1906 earthquake.
+			</div>
+			<img id="forwardArrow" src="forwardArrow.png" alt="forward arrow"/>
+			<img id="backwardsArrow" src="backwardsArrow.png" alt="backwards arrow"/>
+			<div id="forwardOverlay"></div>
+			<div id="backwardOverlay"></div>
+		</div>
+		<script>
+			"use strict";
+			var currentPictureIndex = 0;
+			var imageArray = new Array();
+			var photoArray = [
+					{filename: "memchu.jpg",
+					 caption: "Stanford Memorial Church - the church used to have an 80' bell tower, which fell in the 1906 earthquake."},
+					{filename: "quad.jpg",
+					 caption: "The Stanford Quad"},
+					{filename: "hoop.jpg",
+					 caption: "The <i>Red Hoop Fountain</i> with Green Library in the background."},
+					{filename: "memorial-court.jpg",
+					 caption: "Memorial Court (in the front of the Quad) with Rodin's <i>Burghers of Calais</i> statues."},
+					{filename: "gates.jpg",
+					 caption: "The Gates Building - home of Stanford Computer Science."},
+					{filename: "stone-river.jpg",
+					 caption: "The Stone River statue near the Cantor Arts Center (Stanford's own art museum)."},
+				];
+			for (var i = 0; i < photoArray.length; i++) {
+				imageArray[i] = new Image();
+				imageArray[i].src = photoArray[i].filename;
+			}
+			function handleResize() {
+				var windowWidth = window.innerWidth;
+				var windowHeigth = window.innerHeight;
+				var upperCornerPositionX = parseInt(windowWidth/2) - 400 + "px";
+				var upperCornerPositionY = parseInt(windowHeigth/2) - 300 + "px";
+				document.getElementById('photoSection').style.left = upperCornerPositionX;
+				document.getElementById('photoSection').style.top = upperCornerPositionY;
+			}
+			function changePictureAndCaption(direction){
+				if (direction === 'forward'){
+					currentPictureIndex++;
+					if (currentPictureIndex >= photoArray.length) {
+						currentPictureIndex = 0;
+					}
+				}
+				if (direction === 'backwards'){
+					currentPictureIndex--;
+					if (currentPictureIndex < 0 ) {
+						currentPictureIndex = photoArray.length - 1;
+					}
+				}
+				document.getElementById("photo").src = photoArray[currentPictureIndex].filename;
+				document.getElementById("caption").innerHTML = photoArray[currentPictureIndex].caption;
+			}
+			function displayArrow(imageid, show) {
+				if (show) {
+					document.getElementById(imageid).style.visibility = "visible";
+				} else {
+					document.getElementById(imageid).style.visibility = "hidden";
+				}
+			}
+			window.addEventListener("resize", handleResize, false);
+			document.getElementById("forwardOverlay").addEventListener("click", function(){changePictureAndCaption('forward');}, false);
+			document.getElementById("backwardOverlay").addEventListener("click", function(){changePictureAndCaption('backwards');}, false);
+			document.getElementById("forwardOverlay").addEventListener("mouseover", function(){displayArrow('forwardArrow', true);}, false);
+			document.getElementById("forwardOverlay").addEventListener("mouseout", function(){displayArrow('forwardArrow', false);}, false);
+			document.getElementById("backwardOverlay").addEventListener("mouseover", function(){displayArrow('backwardsArrow', true);}, false);
+			document.getElementById("backwardOverlay").addEventListener("mouseout", function(){displayArrow('backwardsArrow', false);}, false);
+
+		</script>
+	</body>
+</html>
